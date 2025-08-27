@@ -1,0 +1,38 @@
+{
+  "name": "shopee-scraper-ts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "HTTP-first, TypeScript scraper for Shopee (no Playwright)",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "lint": "echo 'add eslint later'",
+    "chrome:headless": "node scripts/launch-chrome.mjs headless",
+    "chrome:headful:min": "node scripts/launch-chrome.mjs headful",
+    "cdp:open": "tsx src/cdp-open.ts"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "chrome-remote-interface": "^0.33.3",
+    "dotenv": "^16.4.5",
+    "got": "^14.4.1",
+    "http-proxy-agent": "^7.0.2",
+    "https-proxy-agent": "^7.0.6",
+    "p-queue": "^8.0.1",
+    "proxy-agent": "^6.4.0",
+    "tough-cookie": "^4.1.4",
+    "undici": "^7.15.0"
+  },
+  "devDependencies": {
+    "@types/chrome-remote-interface": "^0.31.14",
+    "@types/node": "^24.3.0",
+    "@types/tough-cookie": "^4.0.5",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.2"
+  }
+}
