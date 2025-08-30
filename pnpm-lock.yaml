@@ -48,6 +48,9 @@ importers:
       '@types/tough-cookie':
         specifier: ^4.0.5
         version: 4.0.5
+      devtools-protocol:
+        specifier: ^0.0.1505444
+        version: 0.0.1505444
       tsx:
         specifier: ^4.19.0
         version: 4.20.5
@@ -307,6 +310,9 @@ packages:
   degenerator@5.0.1:
     resolution: {integrity: sha512-TllpMR/t0M5sqCXfj85i4XaAzxmS5tVA16dqvdkMwGmzI+dXLXnw3J+3Vdv7VKw+ThlTMboK6i9rnZ6Nntj5CQ==}
     engines: {node: '>= 14'}
+
+  devtools-protocol@0.0.1505444:
+    resolution: {integrity: sha512-bz4usSAqcHtKa5zgLOZq8n2I8dT6+GS+UJpds3qaUvSWUW3NLmJQhVKefOgfdGxraAMPB62a4ksJSB9ZgM5XcQ==}
 
   devtools-protocol@0.0.927104:
     resolution: {integrity: sha512-5jfffjSuTOv0Lz53wTNNTcCUV8rv7d82AhYcapj28bC2B5tDxEZzVb7k51cNxZP2KHw24QE+sW7ZuSeD9NfMpA==}
@@ -776,6 +782,8 @@ snapshots:
       ast-types: 0.13.4
       escodegen: 2.1.0
       esprima: 4.0.1
+
+  devtools-protocol@0.0.1505444: {}
 
   devtools-protocol@0.0.927104: {}
 

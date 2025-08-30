@@ -11,7 +11,8 @@
     "lint": "echo 'add eslint later'",
     "chrome:headless": "node scripts/launch-chrome.mjs headless",
     "chrome:headful:min": "node scripts/launch-chrome.mjs headful",
-    "cdp:open": "tsx src/cdp-open.ts"
+    "cdp:open": "tsx src/cdp-open.ts",
+    "cdp:search": "tsx src/search.ts"
   },
   "engines": {
     "node": ">=20"
@@ -32,6 +33,7 @@
     "@types/chrome-remote-interface": "^0.31.14",
     "@types/node": "^24.3.0",
     "@types/tough-cookie": "^4.0.5",
+    "devtools-protocol": "^0.0.1505444",
     "tsx": "^4.19.0",
     "typescript": "^5.6.2"
   }
