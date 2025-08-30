@@ -1,0 +1,129 @@
+// Prisma schema for SQLite storage of Shopee scraping
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model SearchProduct {
+  id                               Int      @id @default(autoincrement())
+  itemid                           Int
+  shopid                           Int
+  name                             String?
+  shop_name                        String?
+
+  catid                            Int?
+  brand                            String?
+  image                            String?
+  images                           String?
+
+  // Raw prices (Shopee scale)
+  price_raw                        Int?
+  price_min_raw                    Int?
+  price_max_raw                    Int?
+  price_before_discount_raw        Int?
+  price_min_before_discount_raw    Int?
+  price_max_before_discount_raw    Int?
+
+  // Normalized prices
+  price                            Float?
+  price_min                        Float?
+  price_max                        Float?
+  price_before_discount            Float?
+  price_min_before_discount        Float?
+  price_max_before_discount        Float?
+  currency                         String?
+
+  // Sales / social / rating
+  stock                            Int?
+  sold                             Int?
+  historical_sold                  Int?
+  liked                            Boolean?
+  liked_count                      Int?
+  cmt_count                        Int?
+  view_count                       Int?
+
+  rating_star                      Float?
+  rating_count_total               Int?
+  rcount_with_context              Int?
+  rcount_with_image                Int?
+  rating_count_dist                String?
+
+  // Variations / video (stored as JSON blobs)
+  tier_variations                  String?
+  video_info_list                  String?
+
+  // Shop flags
+  shopee_verified                  Boolean?
+  is_official_shop                 Boolean?
+  is_preferred_plus_seller         Boolean?
+
+  // Misc
+  item_status                      String?
+  status                           Int?
+  shop_location                    String?
+  ctime                            Int?
+  item_type                        Int?
+  reference_item_id                String?
+  transparent_background_image     String?
+  is_adult                         Boolean?
+  has_lowest_price_guarantee       Boolean?
+  is_cc_installment_payment_eligible Boolean?
+  is_non_cc_installment_payment_eligible Boolean?
+  is_on_flash_sale                 Boolean?
+  can_use_cod                      Boolean?
+  can_use_wholesale                Boolean?
+  bundle_deal_id                   Int?
+  bundle_deal_label                String?
+  voucher_promotion_id             Int?
+  model_id                         Int?
+
+  // Display price block
+  display_price_raw                Int?
+  strikethrough_price_raw          Int?
+  original_price_raw               Int?
+  discount_numeric                 Int?
+  display_price                    Float?
+  strikethrough_price              Float?
+  original_price                   Float?
+
+  // Ads metadata
+  adsid                            Int?
+  campaignid                       Int?
+
+  // Full JSON payload for audit/debug
+  data                             String?
+
+  // Timestamps
+  capturedAt                       DateTime
+  createdAt                        DateTime @default(now())
+  updatedAt                        DateTime @updatedAt
+
+  details                          ProductDetail[]
+
+  @@unique([itemid, shopid])
+  @@index([itemid])
+  @@index([shopid])
+}
+
+// Product detail (PDP) captured later; references SearchProduct
+model ProductDetail {
+  id               Int            @id @default(autoincrement())
+  searchProductId  Int
+  itemid           Int
+  shopid           Int
+  url              String?
+  data             String?
+
+  capturedAt       DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  searchProduct    SearchProduct @relation(fields: [searchProductId], references: [id], onDelete: Cascade)
+
+  @@index([itemid, shopid])
+}

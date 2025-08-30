@@ -3,6 +3,7 @@ import CDP from 'chrome-remote-interface';
 import { appendFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { upsertSearchProducts } from './db/repo';
 
 type RequestLike = { url: string; method?: string; postData?: string };
 const TARGET_PATH = '/api/v4/search/search_items';
@@ -314,7 +315,7 @@ function extractProducts(payload: any): ProductRecord[] {
 
 CDP()
   .then(async (client) => {
-    const { Network, Page } = client;
+    const { Network, Page, Runtime } = client;
 
     await ensureLogsDir();
 
@@ -370,6 +371,11 @@ CDP()
             const t = new Date().toISOString();
             const lines = products.map((p) => JSON.stringify({ t, ...p })).join('\n') + '\n';
             await appendFile(PROD_LOG, lines);
+            try {
+              await upsertSearchProducts(products, t);
+            } catch (e) {
+              console.warn('[DB] failed to upsert search products:', e);
+            }
             console.log(`[DATA] ${meta.status} ${meta.url} -> ${products.length} products`);
           } else {
             console.log(`[DATA] ${meta.status} ${meta.url} -> no products`);
@@ -391,6 +397,7 @@ CDP()
       // enable domains
       await Network.enable();
       await Page.enable();
+      await Runtime.enable();
 
       // enable request interception only for the target pattern
       await Network.setRequestInterception({
@@ -404,12 +411,30 @@ CDP()
 
       // Navigate to Shopee (can override via env TARGET_URL)
       const domain = process.env.SHOPEE_DOMAIN || 'shopee.com.br';
-      const targetUrl = process.env.TARGET_URL || `https://${domain}/search?keyword=carrinho`;
+      const targetUrl = process.env.TARGET_URL || `https://${domain}/search?keyword=airfryer`;
       await Page.navigate({ url: targetUrl });
       await Page.loadEventFired();
 
-      // Optional: wait a bit for XHRs to fire
-      await new Promise((r) => setTimeout(r, 15000));
+      // Trigger additional result loads by scrolling
+      const SCROLL_STEPS = Number.parseInt(process.env.SCROLL_STEPS || '8', 10);
+      const SCROLL_DELAY_MS = Number.parseInt(process.env.SCROLL_DELAY_MS || '1500', 10);
+      const POST_IDLE_MS = Number.parseInt(process.env.POST_IDLE_MS || '3000', 10);
+
+      // Small initial wait for first XHRs
+      await new Promise((r) => setTimeout(r, 2000));
+
+      for (let i = 0; i < SCROLL_STEPS; i++) {
+        try {
+          await Runtime.evaluate({
+            expression: 'window.scrollTo(0, document.body.scrollHeight); void 0;',
+            awaitPromise: false,
+          });
+        } catch {}
+        await new Promise((r) => setTimeout(r, SCROLL_DELAY_MS));
+      }
+
+      // Allow trailing requests to finish
+      await new Promise((r) => setTimeout(r, POST_IDLE_MS));
     } catch (err: unknown) {
       console.error(err);
     } finally {
