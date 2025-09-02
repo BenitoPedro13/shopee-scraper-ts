@@ -5,7 +5,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -19,7 +19,7 @@ model SearchProduct {
   catid                            Int?
   brand                            String?
   image                            String?
-  images                           String?
+  images                           String?  @db.LongText
 
   // Raw prices (Shopee scale)
   price_raw                        Int?
@@ -51,11 +51,11 @@ model SearchProduct {
   rating_count_total               Int?
   rcount_with_context              Int?
   rcount_with_image                Int?
-  rating_count_dist                String?
+  rating_count_dist                String?  @db.LongText
 
   // Variations / video (stored as JSON blobs)
-  tier_variations                  String?
-  video_info_list                  String?
+  tier_variations                  String?  @db.LongText
+  video_info_list                  String?  @db.LongText
 
   // Shop flags
   shopee_verified                  Boolean?
@@ -96,18 +96,25 @@ model SearchProduct {
   campaignid                       Int?
 
   // Full JSON payload for audit/debug
-  data                             String?
+  data                             String?  @db.LongText
 
   // Timestamps
   capturedAt                       DateTime
   createdAt                        DateTime @default(now())
   updatedAt                        DateTime @updatedAt
 
+  // Minimal scheduling/dedupe helpers
+  lastSeenAt                       DateTime @default(now())
+  seenCount                        Int      @default(1)
+  lastPdpAt                        DateTime?
+  nextPdpAt                        DateTime?
+
   details                          ProductDetail[]
 
   @@unique([itemid, shopid])
   @@index([itemid])
   @@index([shopid])
+  @@index([nextPdpAt])
 }
 
 // Product detail (PDP) captured later; references SearchProduct
@@ -117,7 +124,7 @@ model ProductDetail {
   itemid           Int
   shopid           Int
   url              String?
-  data             String?
+  data             String?        @db.LongText
 
   capturedAt       DateTime
   createdAt        DateTime @default(now())

@@ -86,9 +86,15 @@ export async function upsertSearchProducts(
 
     const updated = await prisma.searchProduct.upsert({
       where: { itemid_shopid: { itemid: p.itemid, shopid: p.shopid } },
-      create: data,
+      create: {
+        ...data,
+        lastSeenAt: capturedAt,
+        seenCount: 1,
+      },
       update: {
         ...data,
+        lastSeenAt: capturedAt,
+        seenCount: { increment: 1 },
         // Do not overwrite createdAt on update; Prisma manages updatedAt
       },
     });
@@ -116,16 +122,29 @@ export async function insertProductDetail(params: {
 
   const searchProductId = sp?.id;
 
-  await prisma.productDetail.create({
-    data: {
-      searchProductId: searchProductId ?? (await ensureSearchProductPlaceholder(itemid, shopid)).id,
-      itemid,
-      shopid,
-      url: url ?? null,
-      data: data ? JSON.stringify(data) : null,
-      capturedAt,
-    },
-  });
+  const parentId =
+    searchProductId ?? (await ensureSearchProductPlaceholder(itemid, shopid)).id;
+
+  await prisma.$transaction([
+    prisma.productDetail.create({
+      data: {
+        searchProductId: parentId,
+        itemid,
+        shopid,
+        url: url ?? null,
+        data: data ? JSON.stringify(data) : null,
+        capturedAt,
+      },
+    }),
+    prisma.searchProduct.update({
+      where: { itemid_shopid: { itemid, shopid } },
+      data: {
+        lastPdpAt: capturedAt,
+        // agenda próxima coleta para ~24h depois
+        nextPdpAt: new Date(capturedAt.getTime() + 24 * 60 * 60 * 1000),
+      },
+    }),
+  ]);
 }
 
 async function ensureSearchProductPlaceholder(itemid: number, shopid: number) {
@@ -135,4 +154,23 @@ async function ensureSearchProductPlaceholder(itemid: number, shopid: number) {
     update: {},
     select: { id: true },
   });
+}
+
+export async function findDueProducts(limit: number): Promise<Array<{ itemid: number; shopid: number }>> {
+  const now = new Date();
+  const rows = await prisma.searchProduct.findMany({
+    where: {
+      OR: [
+        { lastPdpAt: null },
+        { nextPdpAt: { lte: now } },
+      ],
+    },
+    orderBy: [
+      { lastPdpAt: 'asc' },
+      { nextPdpAt: 'asc' },
+    ],
+    take: limit,
+    select: { itemid: true, shopid: true },
+  });
+  return rows.map(r => ({ itemid: r.itemid, shopid: r.shopid }));
 }
