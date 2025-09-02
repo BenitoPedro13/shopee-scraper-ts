@@ -89,6 +89,22 @@ function extractDescriptions(body: any) {
 
 export function parsePdpFromResponse(body: any): PdpProductRecord | null {
   if (!body || typeof body !== 'object') return null;
+  function extractShipping(b: any) {
+    const ps = b?.product_shipping ?? {};
+    const preSel = ps?.pre_selected_shipping_channel ?? null;
+    const ungrouped = Array.isArray(ps?.ungrouped_channel_infos) ? ps.ungrouped_channel_infos : [];
+    const primary = preSel || ungrouped[0] || null;
+    const info = primary?.channel_delivery_info ?? null;
+    const edt_text = info?.edt_text ?? null;
+    const min = typeof info?.estimated_delivery_time_min === 'number' ? info.estimated_delivery_time_min : null;
+    const max = typeof info?.estimated_delivery_time_max === 'number' ? info.estimated_delivery_time_max : null;
+    return {
+      shipping_days_min: min,
+      shipping_days_max: max,
+      shipping_edt_text: typeof edt_text === 'string' ? edt_text : null,
+    } as Pick<PdpProductRecord, 'shipping_days_min' | 'shipping_days_max' | 'shipping_edt_text'>;
+  }
+
   return {
     ...extractIdentity(body),
     ...extractImages(body),
@@ -97,6 +113,6 @@ export function parsePdpFromResponse(body: any): PdpProductRecord | null {
     tier_variations: extractVariations(body),
     models: extractModels(body),
     ...extractDescriptions(body),
+    ...extractShipping(body),
   };
 }
-

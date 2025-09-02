@@ -106,7 +106,7 @@ export async function scrapePdp() {
     await Network.setRequestInterception({ patterns: [ { urlPattern: `*${PDP_API_ENDPOINT}*` } ] });
 
     const domain = process.env.SHOPEE_DOMAIN || 'shopee.com.br';
-    const LIMIT = Number.parseInt(process.env.PDP_VISIT_LIMIT || '5', 10);
+    const LIMIT = Number.parseInt(process.env.PDP_VISIT_LIMIT || '1', 10);
     const POST_IDLE_MS = Number.parseInt(process.env.PDP_POST_IDLE_MS || '2000', 10);
 
     const seeds = await readSeedProducts(LIMIT);
@@ -115,13 +115,32 @@ export async function scrapePdp() {
       return;
     }
 
+    const CLICK_SELECTOR = process.env.PDP_CLICK_SELECTOR || '#sll2-normal-pdp-main > div > div > div > div.container > section > section.flex.flex-auto.YTDXQ0 > div > div.y_zeJr > div > section.flex.KIoPj6.uVwYBh > div > div.wigEZ0 > div.flex.flex-column.JLop8B > div.flex.items-center.C0ngbq > div.flex.items-center.oTmzEO > div > div > div > button';
+
+    async function tryClick(selector: string, retries = 10, delayMs = 500) {
+      for (let i = 0; i < retries; i++) {
+        try {
+          const expr = `(() => { const sel = ${JSON.stringify(selector)}; const el = document.querySelector(sel); if (!el) return 'NF'; el.click(); return 'OK'; })()`;
+          const { result } = await Runtime.evaluate({ expression: expr, awaitPromise: true, returnByValue: true });
+          if (result?.value === 'OK') return true;
+        } catch {}
+        await new Promise((r) => setTimeout(r, delayMs));
+      }
+      return false;
+    }
+
     for (const { itemid, shopid } of seeds) {
       const url = buildProductUrl({ domain, itemid, shopid });
       console.log(`[PDP] Navigating: ${url}`);
       try {
         await Page.navigate({ url });
         await Page.loadEventFired();
-        // small settle delay to allow XHR
+        // Try clicking the requested selector to open shipping drawer/section
+        if (CLICK_SELECTOR) {
+          const clicked = await tryClick(CLICK_SELECTOR);
+          console.log(clicked ? `[PDP] Clicked selector: ${CLICK_SELECTOR}` : `[PDP] Selector not found: ${CLICK_SELECTOR}`);
+        }
+        // small settle delay to allow subsequent XHR
         await new Promise((r) => setTimeout(r, POST_IDLE_MS));
       } catch (e) {
         console.warn(`[PDP] Failed to load ${url}:`, e);
@@ -135,4 +154,3 @@ export async function scrapePdp() {
 }
 
 scrapePdp().catch(console.error);
-

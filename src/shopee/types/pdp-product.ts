@@ -49,5 +49,9 @@ export type PdpProductRecord = {
 
   // Shop
   shop_name?: string | null;
-};
 
+  // Shipping ETA
+  shipping_days_min?: number | null;
+  shipping_days_max?: number | null;
+  shipping_edt_text?: string | null;
+};
