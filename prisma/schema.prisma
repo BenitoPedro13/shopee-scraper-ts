@@ -127,3 +127,149 @@ model ProductDetail {
 
   @@index([itemid, shopid])
 }
+
+/// -- Shopee "scrapper" relational schema (Portuguese names from diagram) --
+
+model produto {
+  id               Int                      @id @default(autoincrement())
+  sku              String?                  @db.VarChar(50)
+  peso             Decimal?                 @db.Decimal(10, 3)
+  correios_nivel   Int?
+  ncm              String?                  @db.VarChar(10)
+  cest             String?                  @db.VarChar(20)
+  ean              String?                  @db.VarChar(20)
+  estoque_minimo   Int?
+  is_desativado    Boolean?                 @default(false)
+  is_analisar      Boolean?                 @default(false)
+  versao_analise   Int?
+
+  // Relations
+  descricoes       produto_descricao[]
+  variacoes        produto_variacao[]
+  fornecedores     fornecedor_produto[]
+  anuncios         anuncio_fornecedor_shopee[]
+}
+
+model produto_descricao {
+  id          Int      @id @default(autoincrement())
+  produto_id  Int
+  descricao   String?  @db.Text
+
+  // Relations
+  produto     produto  @relation(fields: [produto_id], references: [id], onDelete: Cascade)
+
+  @@index([produto_id])
+}
+
+model produto_variacao {
+  id          Int                     @id @default(autoincrement())
+  produto_id  Int
+  sku         String?                 @db.VarChar(100)
+  estoque     Int?
+  custo       Decimal?                @db.Decimal(10, 2)
+
+  // Relations
+  produto     produto                 @relation(fields: [produto_id], references: [id], onDelete: Cascade)
+  atributos   produto_variacao_atributo[]
+
+  @@index([produto_id])
+}
+
+model produto_variacao_atributo {
+  id                 Int               @id @default(autoincrement())
+  produto_variacao_id Int
+  nome_atr           String?           @db.VarChar(100)
+  valor_atr          String?           @db.VarChar(150)
+
+  // Relations
+  variacao           produto_variacao  @relation(fields: [produto_variacao_id], references: [id], onDelete: Cascade)
+
+  @@index([produto_variacao_id])
+}
+
+model fornecedor {
+  id       Int     @id @default(autoincrement())
+  user_id  Int?
+  nome     String? @db.VarChar(150)
+  cep      String? @db.VarChar(16)
+
+  // Relations
+  produtos fornecedor_produto[]
+}
+
+// Join table N:N fornecedor <-> produto
+model fornecedor_produto {
+  fornecedor_id Int
+  produto_id    Int
+
+  fornecedor fornecedor @relation(fields: [fornecedor_id], references: [id], onDelete: Cascade)
+  produto    produto    @relation(fields: [produto_id], references: [id], onDelete: Cascade)
+
+  @@id([fornecedor_id, produto_id])
+  @@index([produto_id])
+}
+
+model anuncio_fornecedor_shopee {
+  id          Int      @id @default(autoincrement())
+  produto_id  Int
+  id_anuncio  Int?
+  titulo      String?  @db.VarChar(200)
+  cep         String?  @db.VarChar(16)
+  url         String?  @db.VarChar(255)
+
+  // Relations
+  produto     produto  @relation(fields: [produto_id], references: [id], onDelete: Cascade)
+  descricao   anuncio_descricao_shopee?
+  variacoes   anuncio_variacao_shopee[]
+
+  @@index([produto_id])
+}
+
+model anuncio_descricao_shopee {
+  id                           Int                       @id @default(autoincrement())
+  anuncio_fornecedor_shopee_id Int
+  descricao                    String?                   @db.Text
+
+  // Relations (1:1)
+  anuncio_fornecedor_shopee anuncio_fornecedor_shopee @relation(fields: [anuncio_fornecedor_shopee_id], references: [id], onDelete: Cascade)
+
+  @@unique([anuncio_fornecedor_shopee_id])
+}
+
+model anuncio_variacao_shopee {
+  id                           Int                        @id @default(autoincrement())
+  anuncio_fornecedor_shopee_id Int
+  sku                          String?                    @db.VarChar(100)
+  estoque                      Int?
+  preco_venda                  Decimal?                   @db.Decimal(10, 2)
+
+  // Relations
+  anuncio_fornecedor_shopee anuncio_fornecedor_shopee @relation(fields: [anuncio_fornecedor_shopee_id], references: [id], onDelete: Cascade)
+  fotos                    anuncio_foto_shopee[]
+  atributos                anuncio_variacao_atributo_shopee[]
+
+  @@index([anuncio_fornecedor_shopee_id])
+}
+
+model anuncio_foto_shopee {
+  id                        Int                     @id @default(autoincrement())
+  anuncio_variacao_shopee_id Int
+  url                       String?                 @db.VarChar(255)
+
+  // Relations
+  variacao anuncio_variacao_shopee @relation(fields: [anuncio_variacao_shopee_id], references: [id], onDelete: Cascade)
+
+  @@index([anuncio_variacao_shopee_id])
+}
+
+model anuncio_variacao_atributo_shopee {
+  id                         Int                      @id @default(autoincrement())
+  anuncio_variacao_shopee_id Int
+  nome_atr                   String?                  @db.VarChar(100)
+  valor_atr                  String?                  @db.VarChar(150)
+
+  // Relations
+  variacao anuncio_variacao_shopee @relation(fields: [anuncio_variacao_shopee_id], references: [id], onDelete: Cascade)
+
+  @@index([anuncio_variacao_shopee_id])
+}
