@@ -106,8 +106,8 @@ export async function scrapePdp() {
     await Network.setRequestInterception({ patterns: [ { urlPattern: `*${PDP_API_ENDPOINT}*` } ] });
 
     const domain = process.env.SHOPEE_DOMAIN || 'shopee.com.br';
-    const LIMIT = Number.parseInt(process.env.PDP_VISIT_LIMIT || '1', 10);
-    const POST_IDLE_MS = Number.parseInt(process.env.PDP_POST_IDLE_MS || '2000', 10);
+    const LIMIT = Number.parseInt(process.env.PDP_VISIT_LIMIT || '20', 10);
+    const POST_IDLE_MS = Number.parseInt(process.env.PDP_POST_IDLE_MS || '4000', 10);
 
     const seeds = await readSeedProducts(LIMIT);
     if (!seeds.length) {
@@ -135,11 +135,11 @@ export async function scrapePdp() {
       try {
         await Page.navigate({ url });
         await Page.loadEventFired();
-        // Try clicking the requested selector to open shipping drawer/section
-        if (CLICK_SELECTOR) {
-          const clicked = await tryClick(CLICK_SELECTOR);
-          console.log(clicked ? `[PDP] Clicked selector: ${CLICK_SELECTOR}` : `[PDP] Selector not found: ${CLICK_SELECTOR}`);
-        }
+        // // Try clicking the requested selector to open shipping drawer/section
+        // if (CLICK_SELECTOR) {
+        //   const clicked = await tryClick(CLICK_SELECTOR);
+        //   console.log(clicked ? `[PDP] Clicked selector: ${CLICK_SELECTOR}` : `[PDP] Selector not found: ${CLICK_SELECTOR}`);
+        // }
         // small settle delay to allow subsequent XHR
         await new Promise((r) => setTimeout(r, POST_IDLE_MS));
       } catch (e) {
