@@ -13,7 +13,7 @@ export async function searchProducts() {
 
     try {
         // extract domains
-        const { Network, Page, Runtime, Fetch } = client;
+        const { Network, Page, Runtime } = client;
 
         await ensureLogsDir();
 
