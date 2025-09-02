@@ -12,7 +12,7 @@
     "chrome:headless": "node scripts/launch-chrome.mjs headless",
     "chrome:headful:min": "node scripts/launch-chrome.mjs headful",
     "cdp:open": "tsx src/cdp-open.ts",
-    "cdp:search": "tsx src/search.ts",
+    "cdp:search": "tsx src/shopee/core/search-products.ts",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push --accept-data-loss",
     "prisma:migrate": "prisma migrate dev --name init",

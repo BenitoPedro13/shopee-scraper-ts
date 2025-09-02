@@ -1,77 +1,9 @@
 import type { Prisma, SearchProduct } from '@prisma/client';
 import { prisma } from './client';
-
-// Shape from src/search.ts
-export type ProductRecord = {
-  itemid?: number;
-  shopid?: number;
-  name?: string;
-  shop_name?: string | null;
-  catid?: number | null;
-  brand?: string | null;
-  image?: string | null;
-  images?: string[] | null;
-  price_raw?: number | null;
-  price_min_raw?: number | null;
-  price_max_raw?: number | null;
-  price_before_discount_raw?: number | null;
-  price_min_before_discount_raw?: number | null;
-  price_max_before_discount_raw?: number | null;
-  price?: number | null;
-  price_min?: number | null;
-  price_max?: number | null;
-  price_before_discount?: number | null;
-  price_min_before_discount?: number | null;
-  price_max_before_discount?: number | null;
-  currency?: string;
-  stock?: number | null;
-  sold?: number | null;
-  historical_sold?: number | null;
-  liked?: boolean | null;
-  liked_count?: number | null;
-  cmt_count?: number | null;
-  view_count?: number | null;
-  rating_star?: number | null;
-  rating_count_total?: number | null;
-  rcount_with_context?: number | null;
-  rcount_with_image?: number | null;
-  rating_count_dist?: number[] | null;
-  tier_variations?: unknown[] | null;
-  video_info_list?: unknown[] | null;
-  shopee_verified?: boolean | null;
-  is_official_shop?: boolean | null;
-  is_preferred_plus_seller?: boolean | null;
-  item_status?: string | null;
-  status?: number | null;
-  shop_location?: string | null;
-  ctime?: number | null;
-  item_type?: number | null;
-  reference_item_id?: string | null;
-  transparent_background_image?: string | null;
-  is_adult?: boolean | null;
-  has_lowest_price_guarantee?: boolean | null;
-  is_cc_installment_payment_eligible?: boolean | null;
-  is_non_cc_installment_payment_eligible?: boolean | null;
-  is_on_flash_sale?: boolean | null;
-  can_use_cod?: boolean | null;
-  can_use_wholesale?: boolean | null;
-  bundle_deal_id?: number | null;
-  bundle_deal_label?: string | null;
-  voucher_promotion_id?: number | null;
-  model_id?: number | null;
-  display_price_raw?: number | null;
-  strikethrough_price_raw?: number | null;
-  original_price_raw?: number | null;
-  discount_numeric?: number | null;
-  display_price?: number | null;
-  strikethrough_price?: number | null;
-  original_price?: number | null;
-  adsid?: number | null;
-  campaignid?: number | null;
-};
+import { SearchResultProductRecord } from '@/shopee/types/search-products';
 
 export async function upsertSearchProducts(
-  products: ProductRecord[],
+  products: SearchResultProductRecord[],
   capturedAtISO: string
 ): Promise<SearchProduct[]> {
   if (!products.length) return [];
